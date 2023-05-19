@@ -1,7 +1,30 @@
+import { useState } from "react";
 import { Card, Line, Img, Tweets, Followers, Button } from "./App.styled";
+import formattedNumber from "./Servise/formatedNumber";
 import logo from "./img/logo.png";
 import picture from "./img/picture.png";
-function App() {
+import { fetchFollower } from "./Servise/fetchFollowers";
+
+import useIsFollowingCard from "./hooks/useIsFollowingCard";
+
+function App({ cardInfo }) {
+  const [state, setState] = useState(cardInfo);
+  const [isFollowing, setIsFollowing] = useIsFollowingCard(false);
+
+  const handleFollowClick = async () => {
+    try {
+      if (!isFollowing) {
+        const followers = await fetchFollower(state);
+        setState((prevState) => ({
+          ...prevState,
+          followers,
+        }));
+        // setIsFollowing(false);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <Card>
       <img
@@ -26,11 +49,13 @@ function App() {
           top: 20,
         }}
       />
-      <Img></Img>
+      <Img imageUrl={state.avatar}></Img>
       <Line></Line>
-      <Tweets>tweets</Tweets>
-      <Followers>followers</Followers>
-      <Button>follow</Button>
+      <Tweets> {state.tweets}Tweets</Tweets>
+      <Followers>{formattedNumber(state.followers)}Follower</Followers>
+      <Button onClick={handleFollowClick} isFollowing={isFollowing}>
+        {isFollowing ? "Following" : "Follow"}
+      </Button>
     </Card>
   );
 }

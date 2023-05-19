@@ -29,8 +29,8 @@ export const Line = styled.div`
     inset 0px -1.71846px 3.43693px #ae7be3, inset 0px 3.43693px 2.5777px #fbf8ff;
 `;
 
-export const Img = styled.div`
-  width: 80px;
+export const Img = styled.div`(({ imageUrl }) => ({
+   width: 80px;
   height: 80px;
   position: absolute;
   left: 50%;
@@ -42,11 +42,11 @@ export const Img = styled.div`
 
   border-radius: 50%;
 
-  background: url("https://cloudflare-ipfs.com/ipfs/Qmd3W5DuhgHirLHGVixi6V76LhCkZUz6pnFt5AJBiyvHye/avatar/1048.jpg");
+  background: url(${`imageUrl`});
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
-`;
+}))`;
 
 export const Tweets = styled.p`
   position: absolute;
