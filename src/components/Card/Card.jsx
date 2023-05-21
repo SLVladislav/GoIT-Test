@@ -1,46 +1,76 @@
-import { useEffect, useState } from "react";
-import useIsFollowingCard from "../../hooks/useIsFollowingCard";
-import { fetchFollowUser } from "../../Servise/fetchFollowUser";
-import fetchFollowingUser from "../../Servise/fetchFollowingUser";
-import Status from "../../status/status";
-import { Cards, Img, Line, Followers, Button, Tweets } from "./Card.styled";
-// import updateStorageFollowing from "../../utils/updateStorageFollowing";
+import PropTypes from "prop-types";
+
+import picture from "../../img/picture.png";
+import logo from "../../img/logo.png";
+
+import {
+  Avatar,
+  Button,
+  FollowCard,
+  Followers,
+  Line,
+  Tweets,
+} from "./Card.styled";
+import axios from "axios";
+import { useState } from "react";
+import Status from "../../services/constants";
+import formattedNumber from "../../services/formattedNumber";
 
 const Card = ({ cardInfo }) => {
   const [state, setState] = useState(cardInfo);
   const [status, setStatus] = useState(Status.IDLE);
-  const [isFollowing, setIsFollowing] = useIsFollowingCard(state.id);
+  const [isFollowing, setIsFollowing] = useState(() => {
+    const followingIDs = JSON.parse(localStorage.getItem(`followingIDs`));
+    return followingIDs.some((id) => id === state.id);
+  });
 
   const handleFollowClick = async () => {
+    setStatus(Status.PENDING);
     try {
       if (!isFollowing) {
-        const followers = await fetchFollowUser(state);
-
+        const res = await axios.put(`/users/${state.id}`, {
+          ...state,
+          followers: (state.followers += 1),
+        });
         setState((prevState) => ({
           ...prevState,
-          followers,
+          followers: res.data.followers,
         }));
-        // setIsFollowing(false);
-        // updateStorageFollowing(state.id, isFollowing);
+
+        const followingIDs = JSON.parse(localStorage.getItem(`followingIDs`));
+
+        localStorage.setItem(
+          `followingIDs`,
+          JSON.stringify([...followingIDs, state.id])
+        );
         setIsFollowing(true);
         setStatus(Status.RESOLVED);
       } else {
-        const followers = await fetchFollowingUser(state);
+        const res = await axios.put(`/users/${state.id}`, {
+          ...state,
+          followers: (state.followers -= 1),
+        });
         setState((prevState) => ({
           ...prevState,
-          followers,
+          followers: res.data.followers,
         }));
-        // updateStorageFollowing(state.id, isFollowing);
+
+        const followingIDs = JSON.parse(localStorage.getItem(`followingIDs`));
+        const newArr = followingIDs.filter((id) => id !== state.id);
+        localStorage.setItem(`followingIDs`, JSON.stringify([...newArr]));
+
         setIsFollowing(false);
         setStatus(Status.RESOLVED);
       }
     } catch (error) {
       setStatus(Status.REJECTED);
+
       console.log(error);
     }
   };
+
   return (
-    <Cards>
+    <FollowCard>
       <img
         src={picture}
         alt="picture"
@@ -63,171 +93,29 @@ const Card = ({ cardInfo }) => {
           top: 20,
         }}
       />
-      <Img imageUrl={state.avatar}></Img>
+      <Avatar imageUrl={state.avatar}></Avatar>
       <Line></Line>
-      <Tweets> {state.tweets}Tweets</Tweets>
-      <Followers>{formattedNumber(state.followers)}Follower</Followers>
+      <Tweets>{state.tweets} Tweets</Tweets>
+      <Followers>{formattedNumber(state.followers)} Followers</Followers>
       <Button
-        onClick={handleFollowClick}
         isFollowing={isFollowing}
-        disabled={status === Status.PENDING || status === Status.REJECTED}
-        // status={status}
+        onClick={handleFollowClick}
+        disabled={status === Status.PENDING}
       >
         {isFollowing ? "Following" : "Follow"}
       </Button>
-    </Cards>
+    </FollowCard>
   );
 };
 
+Card.propTypes = {
+  cardInfo: PropTypes.shape({
+    user: PropTypes.string.isRequired,
+    avatar: PropTypes.string.isRequired,
+    tweets: PropTypes.number.isRequired,
+    followers: PropTypes.number.isRequired,
+    id: PropTypes.string.isRequired,
+  }).isRequired,
+};
+
 export default Card;
-
-// const Card = ({ userFollowers }) => {
-//   const [state, setState] = useState(userFollowers);
-//   const [status, setStatus] = useState(Status.IDLE);
-//   const [isFollowing, setIsFollowing] = useIsFollowingCard(state.id); // Передайте правильне значення id
-
-//   const handleFollowClick = async () => {
-//     try {
-//       if (!isFollowing) {
-//         const followers = await fetchFollowUser(state);
-//         console.log(followers);
-
-//         setState((prevState) => ({
-//           ...prevState,
-//           followers,
-//         }));
-//         setIsFollowing((prevIsFollowing) => !prevIsFollowing);
-//         updateStorageFollowing(state.id, !isFollowing); // Оновлення значення isFollowing
-//         setStatus(Status.RESOLVED);
-//       } else {
-//         const followers = await fetchFollowingUser(state);
-//         setState((prevState) => ({
-//           ...prevState,
-//           followers,
-//         }));
-//         setIsFollowing((prevIsFollowing) => !prevIsFollowing);
-//         updateStorageFollowing(state.id, !isFollowing); // Оновлення значення isFollowing
-//         setStatus(Status.RESOLVED);
-//       }
-//     } catch (error) {
-//       setStatus(Status.REJECTED);
-//       console.log(error);
-//     }
-//   };
-
-//   return (
-//     <Cards>
-//       <img
-//         src={picture}
-//         alt="picture"
-//         style={{
-//           position: "absolute",
-//           width: 308,
-//           height: 168,
-//           left: 36,
-//           top: 28,
-//         }}
-//       />
-//       <img
-//         src={logo}
-//         alt="logo"
-//         style={{
-//           position: "absolute",
-//           width: 76,
-//           height: 22,
-//           left: 20,
-//           top: 20,
-//         }}
-//       />
-//       <Img imageUrl={state.avatar}></Img>
-//       <Line></Line>
-//       <Tweets> {state.tweets}Tweets</Tweets>
-//       <Followers>{formattedNumber(state.followers)}Follower</Followers>
-//       <Button
-//         onClick={handleFollowClick}
-//         isFollowing={isFollowing}
-//         disabled={status === Status.PENDING || status === Status.REJECTED}
-//       >
-//         {isFollowing ? "Following" : "Follow"}
-//       </Button>
-//     </Cards>
-//   );
-// };
-
-// const Card = ({ userFollowers }) => {
-//   const [state, setState] = useState(userFollowers);
-//   const [status, setStatus] = useState(Status.IDLE);
-//   const [isFollowing, setIsFollowing] = useIsFollowingCard(state.id); // Передайте правильне значення id
-
-//   useEffect(() => {
-//     setState(userFollowers);
-//   }, [userFollowers]);
-
-//   const handleFollowClick = async () => {
-//     try {
-//       if (!isFollowing) {
-//         const followers = await fetchFollowUser(state);
-
-//         setState((prevState) => ({
-//           ...prevState,
-//           followers,
-//         }));
-//         setIsFollowing((prevIsFollowing) => !prevIsFollowing);
-//         updateStorageFollowing(state.id, !isFollowing); // Оновлення значення isFollowing
-//         setStatus(Status.RESOLVED);
-//       } else {
-//         const followers = await fetchFollowingUser(state);
-//         setState((prevState) => ({
-//           ...prevState,
-//           followers,
-//         }));
-//         setIsFollowing((prevIsFollowing) => !prevIsFollowing);
-//         updateStorageFollowing(state.id, !isFollowing); // Оновлення значення isFollowing
-//         setStatus(Status.RESOLVED);
-//       }
-//     } catch (error) {
-//       setStatus(Status.REJECTED);
-//       console.log(error);
-//     }
-//   };
-
-//   return (
-//     <Cards>
-//       <img
-//         src={picture}
-//         alt="picture"
-//         style={{
-//           position: "absolute",
-//           width: 308,
-//           height: 168,
-//           left: 36,
-//           top: 28,
-//         }}
-//       />
-//       <img
-//         src={logo}
-//         alt="logo"
-//         style={{
-//           position: "absolute",
-//           width: 76,
-//           height: 22,
-//           left: 20,
-//           top: 20,
-//         }}
-//       />
-//       <Img imageUrl={state.avatar}></Img>
-//       <Line></Line>
-//       <Tweets> {state.tweets} Tweets</Tweets>
-//       <Followers>{formattedNumber(state.followers)} Follower</Followers> //
-//       <Button
-//         onClick={handleFollowClick}
-//         isFollowing={isFollowing}
-//         disabled={status === Status.PENDING || status === Status.REJECTED}
-//       >
-//         {isFollowing ? "Following" : "Follow"}
-//       </Button>
-//     </Cards>
-//   );
-// };
-
-// export default Card;

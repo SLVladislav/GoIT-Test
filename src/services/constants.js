@@ -4,4 +4,5 @@ const Status = {
   RESOLVED: "resolved",
   REJECTED: "rejected",
 };
+
 export default Status;
