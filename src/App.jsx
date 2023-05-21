@@ -10,5 +10,4 @@ const App = () => {
 
 export default App;
 
-// 1.add state machine
-// 2. мутиции
+

@@ -28,7 +28,7 @@ const Card = ({ cardInfo }) => {
     setStatus(Status.PENDING);
     try {
       if (!isFollowing) {
-        const res = await axios.put(`/users/${state.id}`, {
+        const res = await axios.put(`/Followers/${state.id}`, {
           ...state,
           followers: (state.followers += 1),
         });
@@ -46,7 +46,7 @@ const Card = ({ cardInfo }) => {
         setIsFollowing(true);
         setStatus(Status.RESOLVED);
       } else {
-        const res = await axios.put(`/users/${state.id}`, {
+        const res = await axios.put(`/Followers/${state.id}`, {
           ...state,
           followers: (state.followers -= 1),
         });
