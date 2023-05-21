@@ -7,8 +7,8 @@ import { fetchFollower } from "./Servise/fetchFollowers";
 
 import useIsFollowingCard from "./hooks/useIsFollowingCard";
 
-function App({ cardInfo }) {
-  const [state, setState] = useState(cardInfo);
+function App() {
+  const [state, setState] = useState([]);
   const [isFollowing, setIsFollowing] = useIsFollowingCard(false);
 
   const handleFollowClick = async () => {
