@@ -1,15 +1,17 @@
-import App from "../../App";
+import Card from "../Card/Card";
+import { List } from "./CardList.styled";
 
 export const CardList = ({ users }) => {
-//   console.log(users);
+  console.log(users);
   return (
-    <ul>
-      {users && users.length > 0 &&
+    <List>
+      {users &&
+        users.length > 0 &&
         users.map((user) => (
-          <li ke={user.id}>
-            <App />
+          <li key={user.id}>
+            <Card cardInfo={user} />
           </li>
         ))}
-    </ul>
+    </List>
   );
 };

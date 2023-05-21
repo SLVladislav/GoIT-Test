@@ -1,62 +1,123 @@
-import { useState } from "react";
-import { Card, Line, Img, Tweets, Followers, Button } from "./App.styled";
-import formattedNumber from "./Servise/formatedNumber";
-import logo from "./img/logo.png";
-import picture from "./img/picture.png";
+import { useEffect, useState } from "react";
+import { CardList } from "./components/CardList/CardList";
+import Status from "./status/status";
 import { fetchFollower } from "./Servise/fetchFollowers";
+import Paginate from "./components/Pagination/Pagination";
+import Card from "./components/Card/Card";
 
-import useIsFollowingCard from "./hooks/useIsFollowingCard";
+// function App() {
+//   const [userFollowers, setUserFollowers] = useState([]);
+//   const [status, setStatus] = useState(Status.IDLE);
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [filterUsers, setFilterUsers] = useState([]);
+
+//   const cardsPerPage = 4;
+//   const indexOfLastCard = currentPage * cardsPerPage;
+//   const indexOfFirstCard = indexOfLastCard - cardsPerPage;
+//   const cardsOnCurrentPage = filterUsers.slice(
+//     indexOfFirstCard,
+//     indexOfLastCard
+//   );
+//   const count = Math.ceil(filterUsers.length / cardsPerPage);
+
+//   if (cardsOnCurrentPage.length === 0 && currentPage !== 1) {
+//     setCurrentPage((prev) => prev - 1);
+//   }
+
+//  useEffect(() => {
+//    const abortController = new AbortController();
+
+//    const fetchUsers = async () => {
+//      setStatus(Status.PENDING);
+//      try {
+//        const fetchedUsers = await fetchFollower(abortController);
+
+//        setUserFollowers([...fetchedUsers]);
+//        setStatus(Status.RESOLVED);
+//      } catch (error) {
+//        setStatus(Status.REJECTED);
+//        console.log(error);
+//      }
+//    };
+
+//    fetchUsers();
+
+//    return () => {
+//      abortController.abort();
+//    };
+//  }, []);
+
+//   return (
+//     <>
+//       <CardList userFollowers={cardsOnCurrentPage} />
+
+//       <Paginate
+//         currentPage={currentPage}
+//         setCurrentPage={setCurrentPage}
+//         count={count}
+//       />
+//     </>
+//   );
+// }
+
+// export default App;
 
 function App() {
-  const [state, setState] = useState([]);
-  const [isFollowing, setIsFollowing] = useIsFollowingCard(false);
+  const [users, setUsers] = useState([]);
+  const [status, setStatus] = useState(Status.IDLE);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filterUsers, setFilterUsers] = useState([]);
 
-  const handleFollowClick = async () => {
-    try {
-      if (!isFollowing) {
-        const followers = await fetchFollower(state);
-        setState((prevState) => ({
-          ...prevState,
-          followers,
-        }));
-        // setIsFollowing(false);
+  const cardsPerPage = 1;
+  const indexOfLastCard = currentPage * cardsPerPage;
+  const indexOfFirstCard = indexOfLastCard - cardsPerPage;
+  const cardsOnCurrentPage = filterUsers.slice(
+    indexOfFirstCard,
+    indexOfLastCard
+  );
+  const count = Math.ceil(filterUsers.length / cardsPerPage);
+  if (cardsOnCurrentPage.length === 0 && currentPage !== 1) {
+    setCurrentPage((prev) => (prev -= 1));
+  }
+
+  useEffect(() => {
+    const abortController = new AbortController();
+
+    const fetchData = async () => {
+      setStatus(Status.PENDING);
+      try {
+        const fetchedUsers = await fetchFollower(abortController);
+
+        setUsers([...fetchedUsers]);
+        setStatus(Status.RESOLVED);
+      } catch (error) {
+        setStatus(Status.REJECTED);
+        console.log(error);
       }
-    } catch (error) {
-      console.log(error);
-    }
-  };
+    };
+
+    fetchData();
+
+    return () => {
+      abortController.abort();
+    };
+  }, []);
+
+  // useEffect(() => {
+  //   if (cardsOnCurrentPage.length === 0 && currentPage !== 1) {
+  //     setCurrentPage((prev) => prev - 1);
+  //   }
+  // }, [cardsOnCurrentPage, currentPage]);
+
   return (
-    <Card>
-      <img
-        src={picture}
-        alt="picture"
-        style={{
-          position: "absolute",
-          width: 308,
-          height: 168,
-          left: 36,
-          top: 28,
-        }}
+    <>
+      <CardList users={cardsOnCurrentPage} />
+      <Paginate
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        count={count}
       />
-      <img
-        src={logo}
-        alt="logo"
-        style={{
-          position: "absolute",
-          width: 76,
-          height: 22,
-          left: 20,
-          top: 20,
-        }}
-      />
-      <Img imageUrl={state.avatar}></Img>
-      <Line></Line>
-      <Tweets> {state.tweets}Tweets</Tweets>
-      <Followers>{formattedNumber(state.followers)}Follower</Followers>
-      <Button onClick={handleFollowClick} isFollowing={isFollowing}>
-        {isFollowing ? "Following" : "Follow"}
-      </Button>
-    </Card>
+    </>
   );
 }
 
